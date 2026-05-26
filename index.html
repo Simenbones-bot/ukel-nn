@@ -360,16 +360,28 @@
     setInterval(syncFromSheets, 5000);
 
     window.__save = async (kid, amount) => {
-      const data = await sheetsCall({ action: "add", kid, amount });
-      state.ylva = data.ylva || 0;
-      state.edel = data.edel || 0;
-      render();
+      try {
+        const data = await sheetsCall({ action: "add", kid, amount });
+        state.ylva = data.ylva || 0;
+        state.edel = data.edel || 0;
+        render();
+      } catch (e) {
+        statusEl.textContent = "⚠ Feil mot Sheets – lagret midlertidig";
+        statusEl.classList.add("error");
+      }
     };
     window.__set = async (kid, amount) => {
-      const data = await sheetsCall({ action: "set", kid, amount });
-      state.ylva = data.ylva || 0;
-      state.edel = data.edel || 0;
+      state[kid] = amount;
       render();
+      try {
+        const data = await sheetsCall({ action: "set", kid, amount });
+        state.ylva = data.ylva || 0;
+        state.edel = data.edel || 0;
+        render();
+      } catch (e) {
+        statusEl.textContent = "⚠ Feil mot Sheets";
+        statusEl.classList.add("error");
+      }
     };
   } else {
     statusEl.textContent = "Lokal lagring (Google Sheets ikke koblet til ennå)";
@@ -379,9 +391,7 @@
     state.edel = saved.edel || 0;
     render();
     window.__save = (kid, amount) => {
-      state[kid] = (state[kid] || 0) + amount;
       localStorage.setItem(KEY, JSON.stringify(state));
-      render();
     };
     window.__set = (kid, amount) => {
       state[kid] = amount;
@@ -451,18 +461,22 @@
     if (e.target.id === "modal") window.closeModal();
   });
 
-  async function registerJob(chore) {
+  function registerJob(chore) {
     const kid = currentKid;
     window.closeModal();
     const prev = state[kid] || 0;
-    await window.__save(kid, PRICE);
+    // Optimistisk oppdatering – skjer umiddelbart, uansett nettverksstatus
+    state[kid] = prev + PRICE;
+    render();
     playAnimation();
-    if (prev < MAX && prev + PRICE >= MAX) {
+    if (prev < MAX && state[kid] >= MAX) {
       const card = document.querySelector(`.kid-card[data-kid="${kid}"]`);
       card.classList.add("celebrate");
       setTimeout(() => card.classList.remove("celebrate"), 3000);
       bigCelebration();
     }
+    // Synkroniser til backend i bakgrunnen
+    window.__save(kid, PRICE);
   }
 
   window.resetKid = async (kid) => {
