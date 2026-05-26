@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ylva og Edel sin lønnsoversikt</title>
+<style>
+  :root {
+    --pink: #ff6fb5;
+    --purple: #a06cd5;
+    --yellow: #ffd166;
+    --mint: #7be3c8;
+    --bg1: #fff0f8;
+    --bg2: #efe1ff;
+    --text: #2b2545;
+    --card: #ffffffcc;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Comic Sans MS', 'Trebuchet MS', system-ui, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--bg1), var(--bg2));
+    overflow-x: hidden;
+  }
+
+  header {
+    text-align: center;
+    padding: 24px 16px 8px;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: clamp(28px, 5vw, 44px);
+    background: linear-gradient(90deg, var(--pink), var(--purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 0 #fff8;
+  }
+
+  header p {
+    margin: 6px 0 0;
+    opacity: 0.7;
+  }
+
+  .kids {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .kid-card {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 22px;
+    box-shadow: 0 10px 30px #b69cdb33;
+    backdrop-filter: blur(6px);
+    text-align: center;
+    position: relative;
+  }
+
+  .kid-card h2 {
+    margin: 0 0 6px;
+    font-size: 32px;
+  }
+
+  .kid-card .avatar {
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .amount {
+    font-size: 44px;
+    font-weight: bold;
+    margin: 8px 0;
+    color: var(--purple);
+  }
+
+  .amount .unit {
+    font-size: 22px;
+    opacity: 0.7;
+    margin-left: 4px;
+  }
+
+  .progress {
+    background: #f0e6fa;
+    border-radius: 999px;
+    height: 22px;
+    overflow: hidden;
+    margin: 12px 0 6px;
+    position: relative;
+    border: 2px solid #fff;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--pink), var(--yellow), var(--mint));
+    background-size: 300% 100%;
+    width: 0%;
+    transition: width 0.8s cubic-bezier(.2,.9,.3,1.4);
+    animation: shimmer 4s linear infinite;
+    border-radius: 999px;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 300% 0%; }
+  }
+
+  .progress-label {
+    font-size: 13px;
+    opacity: 0.6;
+  }
+
+  .trophy {
+    display: none;
+    font-size: 30px;
+    margin-top: 6px;
+    animation: bounce 1s infinite alternate;
+  }
+  .trophy.show { display: block; }
+  @keyframes bounce {
+    from { transform: translateY(0) rotate(-5deg); }
+    to   { transform: translateY(-10px) rotate(5deg); }
+  }
+
+  .btn {
+    border: none;
+    border-radius: 999px;
+    padding: 14px 22px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    box-shadow: 0 6px 16px #a06cd566;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    font-family: inherit;
+  }
+
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px #a06cd577; }
+  .btn:active { transform: translateY(1px); }
+
+  .btn.small {
+    padding: 8px 14px;
+    font-size: 14px;
+    background: linear-gradient(135deg, #d9c5f0, #c1a8e6);
+  }
+
+  .register-btn {
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: #2b254566;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+  }
+  .modal-backdrop.show { display: flex; }
+
+  .modal {
+    background: white;
+    border-radius: 24px;
+    padding: 22px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 30px 60px #00000033;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .modal h3 {
+    margin: 0 0 14px;
+    text-align: center;
+    font-size: 24px;
+    color: var(--purple);
+  }
+
+  .chores {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .chore-btn {
+    border: 2px solid #efe1ff;
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--text);
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .chore-btn:hover {
+    border-color: var(--pink);
+    transform: translateY(-2px);
+    background: var(--bg1);
+  }
+  .chore-btn .emoji { font-size: 28px; }
+
+  .modal-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 14px;
+  }
+
+  /* Animation layer */
+  #anim-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 100;
+  }
+
+  .floater {
+    position: absolute;
+    font-size: 48px;
+    will-change: transform, opacity;
+    user-select: none;
+  }
+
+  /* Reset / footer */
+  .footer {
+    text-align: center;
+    padding: 10px 16px 24px;
+    opacity: 0.6;
+    font-size: 13px;
+  }
+  .footer button {
+    margin: 0 4px;
+  }
+
+  .status {
+    text-align: center;
+    font-size: 13px;
+    padding: 4px;
+    opacity: 0.65;
+  }
+  .status.error { color: #b00; opacity: 0.9; }
+
+  /* Reach-1000 celebration */
+  .kid-card.celebrate {
+    animation: party 0.8s ease-in-out 3;
+  }
+  @keyframes party {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-2deg) scale(1.02); }
+    75% { transform: rotate(2deg) scale(1.02); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>✨ Ylva & Edel sin lønn ✨</h1>
+  <p>Trykk «Registrer jobb» når du har gjort en oppgave – 10 kr per jobb!</p>
+</header>
+
+<div class="status" id="status">Laster…</div>
+
+<main class="kids">
+  <section class="kid-card" data-kid="ylva">
+    <div class="avatar">👧</div>
+    <h2>Ylva</h2>
+    <div class="amount"><span class="amount-num">0</span><span class="unit"> kr</span></div>
+    <div class="progress"><div class="progress-fill"></div></div>
+    <div class="progress-label"><span class="progress-text">0 / 1000 kr</span></div>
+    <div class="trophy">🏆 Du har nådd 1000 kr! 🏆</div>
+    <button class="btn register-btn" onclick="openModal('ylva')">➕ Registrer jobb</button>
+  </section>
+
+  <section class="kid-card" data-kid="edel">
+    <div class="avatar">👧</div>
+    <h2>Edel</h2>
+    <div class="amount"><span class="amount-num">0</span><span class="unit"> kr</span></div>
+    <div class="progress"><div class="progress-fill"></div></div>
+    <div class="progress-label"><span class="progress-text">0 / 1000 kr</span></div>
+    <div class="trophy">🏆 Du har nådd 1000 kr! 🏆</div>
+    <button class="btn register-btn" onclick="openModal('edel')">➕ Registrer jobb</button>
+  </section>
+</main>
+
+<div class="footer">
+  <button class="btn small" onclick="resetKid('ylva')">Nullstill Ylva</button>
+  <button class="btn small" onclick="resetKid('edel')">Nullstill Edel</button>
+</div>
+
+<!-- Job picker modal -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <h3 id="modal-title">Hvilken jobb gjorde du?</h3>
+    <div class="chores" id="chores"></div>
+    <div class="modal-actions">
+      <button class="btn small" onclick="closeModal()">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<div id="anim-layer"></div>
+
+<script type="module">
+  // ============================================================
+  // FIREBASE CONFIG  – bytt ut verdiene under med dine egne.
+  // Hvis du lar dem stå som "DIN_..." brukes localStorage istedet.
+  // Se README.md for trinnvis oppsett.
+  // ============================================================
+  const firebaseConfig = {
+    apiKey: "DIN_API_KEY",
+    authDomain: "DIN_AUTH_DOMAIN",
+    databaseURL: "DIN_DATABASE_URL",
+    projectId: "DIN_PROJECT_ID",
+  };
+
+  const useFirebase = !Object.values(firebaseConfig).some(v => typeof v === "string" && v.startsWith("DIN_"));
+
+  let db = null;
+  let dataRef = null;
+  let state = { ylva: 0, edel: 0 };
+  const statusEl = document.getElementById("status");
+
+  if (useFirebase) {
+    try {
+      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+      const { getDatabase, ref, onValue, update, increment } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+      const app = initializeApp(firebaseConfig);
+      db = getDatabase(app);
+      dataRef = ref(db, "kids");
+      onValue(dataRef, snap => {
+        const v = snap.val() || {};
+        state.ylva = v.ylva || 0;
+        state.edel = v.edel || 0;
+        render();
+        statusEl.textContent = "✓ Synkronisert i sky";
+      }, err => {
+        statusEl.textContent = "Feil ved sky-synk: " + err.message;
+        statusEl.classList.add("error");
+      });
+      window.__save = async (kid, amount) => {
+        await update(dataRef, { [kid]: increment(amount) });
+      };
+      window.__set = async (kid, amount) => {
+        await update(dataRef, { [kid]: amount });
+      };
+    } catch (e) {
+      statusEl.textContent = "Kunne ikke laste Firebase – bruker lokal lagring. " + e.message;
+      statusEl.classList.add("error");
+      fallbackToLocal();
+    }
+  } else {
+    statusEl.textContent = "Lokal lagring (Firebase ikke konfigurert ennå)";
+    fallbackToLocal();
+  }
+
+  function fallbackToLocal() {
+    const KEY = "ukel-nn-kids";
+    const load = () => {
+      try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
+      catch { return {}; }
+    };
+    const saved = load();
+    state.ylva = saved.ylva || 0;
+    state.edel = saved.edel || 0;
+    render();
+    window.__save = (kid, amount) => {
+      state[kid] = (state[kid] || 0) + amount;
+      localStorage.setItem(KEY, JSON.stringify(state));
+      render();
+    };
+    window.__set = (kid, amount) => {
+      state[kid] = amount;
+      localStorage.setItem(KEY, JSON.stringify(state));
+      render();
+    };
+  }
+
+  // ===== Chores =====
+  const CHORES = [
+    { emoji: "🍽️", name: "Tømme oppvaskmaskinen" },
+    { emoji: "🥢", name: "Sette inn oppvaskmaskinen" },
+    { emoji: "🧹", name: "Vaske gulv" },
+    { emoji: "🌀", name: "Støvsuge" },
+    { emoji: "🗑️", name: "Ta ut søpla" },
+    { emoji: "👕", name: "Brette klær" },
+    { emoji: "🍴", name: "Dekke bordet" },
+    { emoji: "🧽", name: "Rydde av bordet" },
+    { emoji: "🐕", name: "Lufte hunden" },
+    { emoji: "🌸", name: "Vanne blomster" },
+    { emoji: "🐾", name: "Mate kjæledyr" },
+    { emoji: "📬", name: "Hente posten" },
+    { emoji: "🍳", name: "Lage frokost" },
+    { emoji: "🪟", name: "Tørke støv" },
+    { emoji: "👚", name: "Henge opp klær" },
+    { emoji: "🛏️", name: "Re sengen" },
+  ];
+
+  // ===== UI =====
+  const PRICE = 10;
+  const MAX = 1000;
+  let currentKid = null;
+
+  function render() {
+    for (const kid of ["ylva", "edel"]) {
+      const card = document.querySelector(`.kid-card[data-kid="${kid}"]`);
+      const v = state[kid] || 0;
+      card.querySelector(".amount-num").textContent = v;
+      const pct = Math.min(100, (v / MAX) * 100);
+      card.querySelector(".progress-fill").style.width = pct + "%";
+      card.querySelector(".progress-text").textContent = `${v} / ${MAX} kr`;
+      card.querySelector(".trophy").classList.toggle("show", v >= MAX);
+    }
+  }
+
+  window.openModal = (kid) => {
+    currentKid = kid;
+    const name = kid === "ylva" ? "Ylva" : "Edel";
+    document.getElementById("modal-title").textContent = `Hvilken jobb gjorde ${name}?`;
+    const wrap = document.getElementById("chores");
+    wrap.innerHTML = "";
+    for (const c of CHORES) {
+      const btn = document.createElement("button");
+      btn.className = "chore-btn";
+      btn.innerHTML = `<span class="emoji">${c.emoji}</span><span>${c.name}</span>`;
+      btn.onclick = () => registerJob(c);
+      wrap.appendChild(btn);
+    }
+    document.getElementById("modal").classList.add("show");
+  };
+
+  window.closeModal = () => {
+    document.getElementById("modal").classList.remove("show");
+  };
+
+  document.getElementById("modal").addEventListener("click", (e) => {
+    if (e.target.id === "modal") window.closeModal();
+  });
+
+  async function registerJob(chore) {
+    const kid = currentKid;
+    window.closeModal();
+    const prev = state[kid] || 0;
+    await window.__save(kid, PRICE);
+    playAnimation();
+    if (prev < MAX && prev + PRICE >= MAX) {
+      const card = document.querySelector(`.kid-card[data-kid="${kid}"]`);
+      card.classList.add("celebrate");
+      setTimeout(() => card.classList.remove("celebrate"), 3000);
+      bigCelebration();
+    }
+  }
+
+  window.resetKid = async (kid) => {
+    const name = kid === "ylva" ? "Ylva" : "Edel";
+    if (!confirm(`Nullstille ${name} sin lønn?`)) return;
+    await window.__set(kid, 0);
+  };
+
+  // ===== Animations =====
+  const POOLS = {
+    cats:      ["🐱","🐈","🐈‍⬛","😺","😸","😻","😽","🐾"],
+    unicorns:  ["🦄","🌈","✨","💖","🌟"],
+    magic:     ["🪄","✨","🌟","💫","⚡","🔮"],
+    hearts:    ["💖","💕","💗","💝","❤️","💜","💙","💛","🧡"],
+    flowers:   ["🌸","🌺","🌻","🌹","🌷","💐","🌼"],
+    sweets:    ["🍭","🍬","🧁","🍰","🍪","🍩","🍦"],
+    stars:     ["⭐","🌟","✨","💫","🌠"],
+    party:     ["🎉","🎊","🎈","🪅","🎁","🥳"],
+    fairy:     ["🧚","🧚‍♀️","🧚‍♂️","✨","🪄"],
+    animals:   ["🦋","🐰","🐶","🦊","🐼","🐨","🐹","🐸"],
+    rainbow:   ["🌈","☁️","💖","✨"],
+    space:     ["🚀","🪐","🌙","⭐","💫","👽"],
+  };
+  const POOL_KEYS = Object.keys(POOLS);
+
+  const ANIMATIONS = [
+    rainAnim,            // emojis falling from top
+    riseAnim,            // emojis rising from bottom
+    crossLeftRightAnim,  // crossing left to right
+    crossRightLeftAnim,  // crossing right to left
+    explodeFromCenterAnim,
+    spiralAnim,
+    burstFromBottomAnim,
+    diagonalRainAnim,
+    wiggleStaticAnim,
+    bounceTopAnim,
+    confettiAnim,
+    circleOrbitAnim,
+  ];
+
+  function playAnimation() {
+    const pool = POOLS[POOL_KEYS[Math.floor(Math.random() * POOL_KEYS.length)]];
+    const anim = ANIMATIONS[Math.floor(Math.random() * ANIMATIONS.length)];
+    anim(pool);
+  }
+
+  function bigCelebration() {
+    // Multiple animations at once
+    for (let i = 0; i < 4; i++) {
+      setTimeout(() => {
+        const pool = POOLS[POOL_KEYS[Math.floor(Math.random() * POOL_KEYS.length)]];
+        ANIMATIONS[Math.floor(Math.random() * ANIMATIONS.length)](pool);
+      }, i * 250);
+    }
+  }
+
+  const layer = document.getElementById("anim-layer");
+
+  function makeFloater(emoji, size = 48) {
+    const el = document.createElement("div");
+    el.className = "floater";
+    el.textContent = emoji;
+    el.style.fontSize = size + "px";
+    layer.appendChild(el);
+    return el;
+  }
+
+  function rand(min, max) { return Math.random() * (max - min) + min; }
+  function pick(pool) { return pool[Math.floor(Math.random() * pool.length)]; }
+
+  function animate(el, keyframes, options, onDone) {
+    const a = el.animate(keyframes, options);
+    a.onfinish = () => { el.remove(); onDone && onDone(); };
+    a.oncancel = () => { el.remove(); };
+  }
+
+  function rainAnim(pool) {
+    const count = 25;
+    for (let i = 0; i < count; i++) {
+      const el = makeFloater(pick(pool), rand(28, 64));
+      const x = rand(0, window.innerWidth);
+      el.style.left = x + "px";
+      el.style.top = "-80px";
+      const dur = rand(2200, 4000);
+      const rot = rand(-360, 360);
+      animate(el, [
+        { transform: `translateY(0) rotate(0deg)`, opacity: 1 },
+        { transform: `translateY(${window.innerHeight + 200}px) rotate(${rot}deg)`, opacity: 0.9 }
+      ], { duration: dur, delay: rand(0, 600), easing: "cubic-bezier(.4,.0,.6,1)" });
+    }
+  }
+
+  function riseAnim(pool) {
+    const count = 22;
+    for (let i = 0; i < count; i++) {
+      const el = makeFloater(pick(pool), rand(28, 64));
+      const x = rand(0, window.innerWidth);
+      el.style.left = x + "px";
+      el.style.top = (window.innerHeight + 60) + "px";
+      const dur = rand(2400, 4200);
+      const sway = rand(-100, 100);
+      animate(el, [
+        { transform: `translate(0,0) rotate(0)`, opacity: 1 },
+        { transform: `translate(${sway}px, ${-window.innerHeight - 200}px) rotate(${rand(-180,180)}deg)`, opacity: 0 }
+      ], { duration: dur, delay: rand(0, 600), easing: "ease-out" });
+    }
+  }
+
+  function crossLeftRightAnim(pool) {
+    for (let i = 0; i < 14; i++) {
+      const el = makeFloater(pick(pool), rand(40, 80));
+      el.style.left = "-100px";
+      el.style.top = rand(20, window.innerHeight - 80) + "px";
+      animate(el, [
+        { transform: `translateX(0) rotate(0)` },
+        { transform: `translateX(${window.innerWidth + 200}px) rotate(${rand(-90,90)}deg)` }
+      ], { duration: rand(2200, 3800), delay: rand(0, 800), easing: "ease-in-out" });
+    }
+  }
+
+  function crossRightLeftAnim(pool) {
+    for (let i = 0; i < 14; i++) {
+      const el = makeFloater(pick(pool), rand(40, 80));
+      el.style.left = (window.innerWidth + 80) + "px";
+      el.style.top = rand(20, window.innerHeight - 80) + "px";
+      animate(el, [
+        { transform: `translateX(0) rotate(0)` },
+        { transform: `translateX(${-(window.innerWidth + 200)}px) rotate(${rand(-90,90)}deg)` }
+      ], { duration: rand(2200, 3800), delay: rand(0, 800), easing: "ease-in-out" });
+    }
+  }
+
+  function explodeFromCenterAnim(pool) {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    const count = 30;
+    for (let i = 0; i < count; i++) {
+      const el = makeFloater(pick(pool), rand(28, 56));
+      el.style.left = cx + "px";
+      el.style.top = cy + "px";
+      const angle = (i / count) * Math.PI * 2 + rand(-0.2, 0.2);
+      const dist = rand(250, 600);
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist;
+      animate(el, [
+        { transform: `translate(-50%,-50%) scale(0) rotate(0)`, opacity: 1 },
+        { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(1) rotate(${rand(-360,360)}deg)`, opacity: 0 }
+      ], { duration: rand(1400, 2200), easing: "cubic-bezier(.2,.7,.2,1)" });
+    }
+  }
+
+  function spiralAnim(pool) {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    const count = 24;
+    for (let i = 0; i < count; i++) {
+      const el = makeFloater(pick(pool), rand(28, 56));
+      el.style.left = cx + "px";
+      el.style.top = cy + "px";
+      const baseAngle = (i / count) * Math.PI * 2;
+      const dur = rand(2500, 3500);
+      const radius = rand(220, 420);
+      const keyframes = [];
+      for (let t = 0; t <= 1; t += 0.05) {
+        const a = baseAngle + t * Math.PI * 4;
+        const r = radius * t;
+        keyframes.push({
+          transform: `translate(-50%,-50%) translate(${Math.cos(a)*r}px, ${Math.sin(a)*r}px) rotate(${t*720}deg)`,
+          opacity: 1 - t * 0.7
+        });
+      }
+      animate(el, keyframes, { duration: dur, easing: "linear" });
+    }
+  }
+
+  function burstFromBottomAnim(pool) {
+    const bx = window.innerWidth / 2;
+    const by = window.innerHeight + 20;
+    const count = 30;
+    for (let i = 0; i < count; i++) {
+      const el = makeFloater(pick(pool), rand(28, 56));
+      el.style.left = bx + "px";
+      el.style.top = by + "px";
+      const angle = -Math.PI/2 + rand(-Math.PI/2.5, Math.PI/2.5);
+      const speed = rand(500, 900);
+      const tx = Math.cos(angle) * speed;
+      const ty = Math.sin(angle) * speed;
+      animate(el, [
+        { transform: `translate(-50%,-50%)`, opacity: 1 },
+        { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty - 200}px)) rotate(${rand(-720,720)}deg)`, opacity: 0 }
+      ], { duration: rand(1800, 2800), delay: rand(0, 400), easing: "cubic-bezier(.2,.6,.4,1)" });
+    }
+  }
+
+  function diagonalRainAnim(pool) {
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    for (let i = 0; i < 28; i++) {
+      const el = makeFloater(pick(pool), rand(28, 56));
+      const startX = dir === 1 ? rand(-200, window.innerWidth) : rand(0, window.innerWidth + 200);
+      el.style.left = startX + "px";
+      el.style.top = "-80px";
+      const dur = rand(2200, 3800);
+      animate(el, [
+        { transform: `translate(0,0) rotate(0)`, opacity: 1 },
+        { transform: `translate(${dir * rand(200,500)}px, ${window.innerHeight + 200}px) rotate(${rand(-360,360)}deg)`, opacity: 0.8 }
+      ], { duration: dur, delay: rand(0, 600), easing: "ease-in" });
+    }
+  }
+
+  function wiggleStaticAnim(pool) {
+    for (let i = 0; i < 18; i++) {
+      const el = makeFloater(pick(pool), rand(42, 84));
+      el.style.left = rand(20, window.innerWidth - 80) + "px";
+      el.style.top = rand(20, window.innerHeight - 80) + "px";
+      animate(el, [
+        { transform: `scale(0) rotate(0)`, opacity: 0 },
+        { transform: `scale(1.2) rotate(20deg)`, opacity: 1, offset: 0.25 },
+        { transform: `scale(1) rotate(-15deg)`, opacity: 1, offset: 0.55 },
+        { transform: `scale(1.1) rotate(10deg)`, opacity: 1, offset: 0.8 },
+        { transform: `scale(0) rotate(-30deg)`, opacity: 0 },
+      ], { duration: rand(1800, 2600), delay: rand(0, 600), easing: "ease-in-out" });
+    }
+  }
+
+  function bounceTopAnim(pool) {
+    for (let i = 0; i < 16; i++) {
+      const el = makeFloater(pick(pool), rand(36, 64));
+      el.style.left = rand(0, window.innerWidth) + "px";
+      el.style.top = "-80px";
+      const ground = rand(window.innerHeight * 0.5, window.innerHeight - 80);
+      animate(el, [
+        { transform: `translateY(0) rotate(0)`, opacity: 1, offset: 0 },
+        { transform: `translateY(${ground}px) rotate(${rand(-90,90)}deg)`, opacity: 1, offset: 0.55, easing: "ease-in" },
+        { transform: `translateY(${ground - 80}px) rotate(${rand(-90,90)}deg)`, opacity: 1, offset: 0.7, easing: "ease-out" },
+        { transform: `translateY(${ground}px) rotate(${rand(-90,90)}deg)`, opacity: 1, offset: 0.85, easing: "ease-in" },
+        { transform: `translateY(${ground - 30}px) rotate(${rand(-90,90)}deg)`, opacity: 0, offset: 1 },
+      ], { duration: rand(2200, 3200), delay: rand(0, 400) });
+    }
+  }
+
+  function confettiAnim(pool) {
+    const count = 50;
+    for (let i = 0; i < count; i++) {
+      const el = makeFloater(pick(pool), rand(20, 40));
+      el.style.left = rand(0, window.innerWidth) + "px";
+      el.style.top = "-40px";
+      const sway = rand(-150, 150);
+      animate(el, [
+        { transform: `translate(0,0) rotate(0)`, opacity: 1 },
+        { transform: `translate(${sway}px, ${window.innerHeight + 100}px) rotate(${rand(-720, 720)}deg)`, opacity: 0.85 }
+      ], { duration: rand(2400, 4200), delay: rand(0, 1000), easing: "cubic-bezier(.3,.0,.7,1)" });
+    }
+  }
+
+  function circleOrbitAnim(pool) {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    const count = 16;
+    const radius = Math.min(window.innerWidth, window.innerHeight) * 0.32;
+    for (let i = 0; i < count; i++) {
+      const el = makeFloater(pick(pool), rand(36, 60));
+      el.style.left = cx + "px";
+      el.style.top = cy + "px";
+      const startAngle = (i / count) * Math.PI * 2;
+      const keyframes = [];
+      for (let t = 0; t <= 1; t += 0.05) {
+        const a = startAngle + t * Math.PI * 2;
+        keyframes.push({
+          transform: `translate(-50%,-50%) translate(${Math.cos(a)*radius}px, ${Math.sin(a)*radius}px) rotate(${t*360}deg)`,
+          opacity: t < 0.1 ? t * 10 : (t > 0.9 ? (1 - t) * 10 : 1)
+        });
+      }
+      animate(el, keyframes, { duration: 2400, easing: "linear" });
+    }
+  }
+</script>
+
+</body>
+</html>
