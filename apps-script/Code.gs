@@ -12,7 +12,7 @@ function doGet(e) {
 
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET);
-    var p = e.parameter || {};
+    var p = (e && e.parameter) || {};
 
     if (p.action === "add") {
       var row = p.kid === "ylva" ? 2 : 3;
