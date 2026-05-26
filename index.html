@@ -323,64 +323,58 @@
 
 <script type="module">
   // ============================================================
-  // FIREBASE CONFIG  – bytt ut verdiene under med dine egne.
-  // Hvis du lar dem stå som "DIN_..." brukes localStorage istedet.
-  // Se README.md for trinnvis oppsett.
+  // GOOGLE SHEETS CONFIG
+  // Lim inn URL-en til ditt Apps Script web app her.
+  // La stå tom ("") for å bruke lokal lagring (kun for testing).
+  // Se README.md for oppsett.
   // ============================================================
-  const firebaseConfig = {
-    apiKey: "DIN_API_KEY",
-    authDomain: "DIN_AUTH_DOMAIN",
-    databaseURL: "DIN_DATABASE_URL",
-    projectId: "DIN_PROJECT_ID",
-  };
+  const SCRIPT_URL = "";
 
-  const useFirebase = !Object.values(firebaseConfig).some(v => typeof v === "string" && v.startsWith("DIN_"));
-
-  let db = null;
-  let dataRef = null;
-  let state = { ylva: 0, edel: 0 };
+  const state = { ylva: 0, edel: 0 };
   const statusEl = document.getElementById("status");
+  const useSheets = SCRIPT_URL.startsWith("https://");
 
-  if (useFirebase) {
-    try {
-      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-      const { getDatabase, ref, onValue, update, increment } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
-      const app = initializeApp(firebaseConfig);
-      db = getDatabase(app);
-      dataRef = ref(db, "kids");
-      onValue(dataRef, snap => {
-        const v = snap.val() || {};
-        state.ylva = v.ylva || 0;
-        state.edel = v.edel || 0;
-        render();
-        statusEl.textContent = "✓ Synkronisert i sky";
-      }, err => {
-        statusEl.textContent = "Feil ved sky-synk: " + err.message;
-        statusEl.classList.add("error");
-      });
-      window.__save = async (kid, amount) => {
-        await update(dataRef, { [kid]: increment(amount) });
-      };
-      window.__set = async (kid, amount) => {
-        await update(dataRef, { [kid]: amount });
-      };
-    } catch (e) {
-      statusEl.textContent = "Kunne ikke laste Firebase – bruker lokal lagring. " + e.message;
-      statusEl.classList.add("error");
-      fallbackToLocal();
-    }
-  } else {
-    statusEl.textContent = "Lokal lagring (Firebase ikke konfigurert ennå)";
-    fallbackToLocal();
+  async function sheetsCall(params) {
+    const url = new URL(SCRIPT_URL);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const res = await fetch(url.toString(), { redirect: "follow" });
+    return res.json();
   }
 
-  function fallbackToLocal() {
-    const KEY = "ukel-nn-kids";
-    const load = () => {
-      try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
-      catch { return {}; }
+  async function syncFromSheets() {
+    try {
+      const data = await sheetsCall({});
+      state.ylva = data.ylva || 0;
+      state.edel = data.edel || 0;
+      render();
+      statusEl.textContent = "✓ Synkronisert med Google Sheets";
+      statusEl.classList.remove("error");
+    } catch (e) {
+      statusEl.textContent = "Kunne ikke nå Google Sheets: " + e.message;
+      statusEl.classList.add("error");
+    }
+  }
+
+  if (useSheets) {
+    await syncFromSheets();
+    setInterval(syncFromSheets, 5000);
+
+    window.__save = async (kid, amount) => {
+      const data = await sheetsCall({ action: "add", kid, amount });
+      state.ylva = data.ylva || 0;
+      state.edel = data.edel || 0;
+      render();
     };
-    const saved = load();
+    window.__set = async (kid, amount) => {
+      const data = await sheetsCall({ action: "set", kid, amount });
+      state.ylva = data.ylva || 0;
+      state.edel = data.edel || 0;
+      render();
+    };
+  } else {
+    statusEl.textContent = "Lokal lagring (Google Sheets ikke koblet til ennå)";
+    const KEY = "ukel-nn-kids";
+    const saved = JSON.parse(localStorage.getItem(KEY) || "{}");
     state.ylva = saved.ylva || 0;
     state.edel = saved.edel || 0;
     render();

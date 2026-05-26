@@ -1,86 +1,88 @@
 # Ylva & Edel sin lønnsoversikt
 
-En enkel nettside som holder oversikt over hvor mye penger Ylva og Edel har tjent på husarbeid. 10 kr per jobb, maks 1000 kr i visning. Hver gang en jobb registreres får man en tilfeldig animasjon med katter, enhjørninger, hjerter osv.
+Enkel nettside som holder oversikt over husarbeid-lønn. 10 kr per jobb, maks 1000 kr i visning. Data lagres i Google Sheets – begge foreldre ser det samme i sanntid.
 
-## Hvordan kjøre lokalt
+## Test uten oppsett
 
-Bare åpne `index.html` i en nettleser. Da brukes lokal lagring (kun synlig på den enheten).
+Åpne `index.html` i nettleser. Da brukes lokal lagring (kun på den enheten). Bra for å prøve design og animasjoner.
 
-## Sett opp delt lagring (Firebase) – ca. 5 minutter
+---
 
-For at både du og kona di skal kunne se og oppdatere samme data fra forskjellige enheter, må vi koble til en gratis sky-database (Firebase Realtime Database).
+## Koble til Google Sheets – ca. 5 minutter
 
-### Steg 1 – Lag Firebase-prosjekt
+### Steg 1 – Lag Google Sheets-arket
 
-1. Gå til https://console.firebase.google.com og logg inn med Google-konto.
-2. Klikk **«Add project»** (Legg til prosjekt). Gi det et navn, f.eks. `ylva-edel-lonn`.
-3. Du kan skru av Google Analytics – det trengs ikke.
+1. Gå til **sheets.google.com** og lag et nytt ark
+2. Gi fanen (arket) nederst navnet **`kids`** (dobbeltklikk på «Sheet1»)
+3. Fyll inn disse cellene:
 
-### Steg 2 – Slå på Realtime Database
+   | | A | B |
+   |---|---|---|
+   | **2** | Ylva | 0 |
+   | **3** | Edel | 0 |
 
-1. I venstremenyen: **Build → Realtime Database**.
-2. Klikk **«Create Database»**.
-3. Velg en lokasjon (f.eks. *europe-west1*).
-4. Velg **«Start in test mode»** (det er greit for et familieprosjekt).
-5. Klikk **Enable**.
+   (Rad 1 kan du la stå tom, eller skrive «Navn» / «Kroner» som overskrift)
 
-> Test mode lar hvem som helst med URL-en lese/skrive. Det er greit her, men ikke del URL-en offentlig. Vil du ha det strengere kan du sette regler senere.
+### Steg 2 – Lag Apps Script
 
-### Steg 3 – Hent ut config
+1. I arket: trykk **Extensions → Apps Script**
+2. Slett alt som står i editoren
+3. Kopier inn innholdet fra filen **`apps-script/Code.gs`** i dette repoet
+4. Klikk **Lagre** (diskikonet)
 
-1. Gå til **Project settings** (tannhjul-ikonet øverst til venstre).
-2. Under **«Your apps»**, klikk på `</>` (Web).
-3. Gi appen et kallenavn (f.eks. `web`). Trenger ikke huske «Firebase Hosting».
-4. Klikk **Register app**.
-5. Du får en `firebaseConfig`-snutt som ser ca. slik ut:
+### Steg 3 – Deploy som web app
 
-   ```js
-   const firebaseConfig = {
-     apiKey: "AIzaSy...",
-     authDomain: "ylva-edel-lonn.firebaseapp.com",
-     databaseURL: "https://ylva-edel-lonn-default-rtdb.europe-west1.firebasedatabase.app",
-     projectId: "ylva-edel-lonn",
-     // ...
-   };
+1. Trykk **Deploy → New deployment**
+2. Klikk tannhjulet ved «Select type» → velg **Web app**
+3. Fyll inn:
+   - **Description**: `Chore tracker`
+   - **Execute as**: `Me`
+   - **Who has access**: `Anyone`
+4. Trykk **Deploy**
+5. Godkjenn tilgang (Google ber deg logge inn og godkjenne)
+6. Kopier **Web app URL** – den ser ut som:
+   ```
+   https://script.google.com/macros/s/AKfycby.../exec
    ```
 
-   **VIKTIG:** `databaseURL` må være med! Hvis den mangler i snutten, finner du den i Realtime Database-fanen.
+### Steg 4 – Lim inn URL i index.html
 
-### Steg 4 – Lim inn i index.html
-
-Åpne `index.html`, finn blokken som starter med `const firebaseConfig = {` og bytt ut verdiene `"DIN_..."` med dine egne. Det holder å ha med disse fire:
+Åpne `index.html` på GitHub (branch: `claude/kids-chore-tracker-2g0aP`), finn linjen:
 
 ```js
-const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "ylva-edel-lonn.firebaseapp.com",
-  databaseURL: "https://ylva-edel-lonn-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "ylva-edel-lonn",
-};
+const SCRIPT_URL = "";
 ```
 
-Lagre, commit og push:
+Bytt til:
 
-```sh
-git add index.html
-git commit -m "Konfigurer Firebase"
-git push
+```js
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby.../exec";
 ```
 
-## Sett opp GitHub Pages (gratis hosting)
+Commit direkte på branchen. Etter ~30 sek oppdateres GitHub Pages, og siden viser **«✓ Synkronisert med Google Sheets»**.
 
-1. Gå til repo-et på GitHub → **Settings** → **Pages**.
-2. Under **Source**, velg branchen som inneholder `index.html` (f.eks. `main` etter at du har merget), og mappen `/ (root)`.
-3. Klikk **Save**.
-4. Etter et minutt får du en URL av typen `https://<brukernavn>.github.io/ukel-nn/`. Bokmerk den på telefonene deres.
+---
+
+## GitHub Pages (gratis hosting)
+
+1. GitHub-repo → **Settings → Pages**
+2. Source: **Deploy from a branch**
+3. Branch: `claude/kids-chore-tracker-2g0aP`, mappe: `/ (root)`
+4. **Save** → vent ~1 min → du får URL-en `https://simenbones-bot.github.io/ukel-nn/`
+
+---
 
 ## Filer
 
-- `index.html` – hele appen (HTML, CSS, JS i én fil)
-- `README.md` – denne filen
+| Fil | Beskrivelse |
+|---|---|
+| `index.html` | Hele appen – HTML, CSS og JS i én fil |
+| `apps-script/Code.gs` | Kode som limes inn i Google Apps Script |
+| `README.md` | Denne filen |
 
 ## Tilpasninger
 
-- Endre listen over jobber: rediger arrayet `CHORES` i `index.html`.
-- Endre pris per jobb: variabelen `PRICE`.
-- Endre maks-beløp i visning: variabelen `MAX`.
+- Oppgaveliste: rediger `CHORES`-arrayet i `index.html`
+- Pris per jobb: variabelen `PRICE`
+- Maks-beløp i visning: variabelen `MAX`
+- Pollingsintervall: `setInterval(syncFromSheets, 5000)` — 5000 = 5 sekunder
