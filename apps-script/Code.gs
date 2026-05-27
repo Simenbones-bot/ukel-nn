@@ -29,7 +29,16 @@ function doGet(e) {
       ylva: Number(sheet.getRange(2, 2).getValue()) || 0,
       edel: Number(sheet.getRange(3, 2).getValue()) || 0
     };
-    return ContentService.createTextOutput(JSON.stringify(data))
+
+    var json = JSON.stringify(data);
+
+    // JSONP-støtte: hvis callback-parameter er sendt, pakk inn svaret
+    if (p.callback) {
+      return ContentService.createTextOutput(p.callback + "(" + json + ");")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+
+    return ContentService.createTextOutput(json)
       .setMimeType(ContentService.MimeType.JSON);
 
   } finally {
