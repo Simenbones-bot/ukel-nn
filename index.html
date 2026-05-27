@@ -335,9 +335,10 @@
   const useSheets = SCRIPT_URL.startsWith("https://");
 
   async function sheetsCall(params) {
-    const url = new URL(SCRIPT_URL);
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    const res = await fetch(url.toString(), { redirect: "follow" });
+    const target = new URL(SCRIPT_URL);
+    Object.entries(params).forEach(([k, v]) => target.searchParams.set(k, v));
+    const proxied = "https://corsproxy.io/?url=" + encodeURIComponent(target.toString());
+    const res = await fetch(proxied);
     return res.json();
   }
 
